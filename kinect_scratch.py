@@ -93,6 +93,7 @@ class GameRuntime(object):
                         # calculate delta y to see if is firing
                         self.delta[i] = self.prevRightHandHeight[i] - self.curRightHandHeight[i]
                         if math.isnan(self.delta[i]) or self.delta[i] < 0:
+                            self.delta[i] = 0
                             self.handState[i] = 0
                         
                         self.handState += self.delta*10
