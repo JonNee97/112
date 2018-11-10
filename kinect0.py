@@ -87,7 +87,7 @@ class GameRuntime(object):
 
                 if self.bodies is not None: 
                     for i in range(0, self.kinect.max_body_count):
-                        body = self.bodies.bodies
+                        body = self.bodies.bodies[i]
                         if not body.is_tracked:
                             self.curRightHandHeight = 0
                             continue 
@@ -97,34 +97,38 @@ class GameRuntime(object):
                         if joints[PyKinectV2.JointType_HandRight].TrackingState != PyKinectV2.TrackingState_NotTracked:
                             
                             self.curRightHandHeight = joints[PyKinectV2.JointType_HandRight].Position.y
+                            print("Called!")
                         if joints[PyKinectV2.JointType_Neck].TrackingState != PyKinectV2.TrackingState_NotTracked:
                             self.curHeight = joints[PyKinectV2.JointType_Neck].Position.y
+                            print(self.curHeight)
                             
           
 
                         # calculate delta y to see if is firing
                         self.delta = self.prevRightHandHeight - self.curRightHandHeight
                         self.deltaJump = self.prevHeight - self.curHeight
-                        if math.isnan(self.delta) or self.delta < 0:
+                        if math.isnan(self.delta) or self.delta > 0:
                             self.handState = 0
                             self.delta = 0
                         if math.isnan(self.deltaJump) or self.deltaJump > 0:
                             self.deltaJump = 0
+                            self.bodyState = 0
                         
-            self.handState += self.delta*300
-            self.bodyState += self.deltaJump *300
+            self.handState -= self.delta*30
+            self.bodyState -= self.deltaJump *30
             # cycle previous and current heights for next time
             self.prevRightHandHeight = self.curRightHandHeight
             self.prevHeight = self.curHeight
-            print(self.handState) # debug: printing handState
-            if self.handState >= 3:
+            #print("hand:",self.handState,end = "") # debug: printing handState
+            print("body:",self.bodyState)
+            if self.handState >= 6:
                 self.flag = True
             else: self.flag = False
 
             
             hToW = float(self.frameSurface.get_height()) / self.frameSurface.get_width()
             targetHeight = int(hToW * self.screen.get_width())
-            surfaceToDraw = pygame.transform.scale(self.frameSurface, (self.screen.get_width(), targetHeight));
+            surfaceToDraw = pygame.transform.scale(self.frameSurface, (self.screen.get_width(), targetHeight))
             self.screen.blit(surfaceToDraw, (0,0))
             surfaceToDraw = None
             pygame.display.update()
@@ -136,8 +140,8 @@ class GameRuntime(object):
         self.kinect.close()
         pygame.quit()
 
-game = GameRuntime();
-game.run();
+game = GameRuntime()
+game.run()
 
 
 
