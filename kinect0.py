@@ -21,12 +21,16 @@ class GameRuntime(object):
         self.screenWidth = 1920
         self.screenHeight = 1080
 
-        self.delta = [0]*2
+        self.delta = 0
+        self.deltaJump = 0
         self.flag = False
 
-        self.prevRightHandHeight = [0]*2
-        self.curRightHandHeight = [0]*2
-        self.handState = [0]*2
+        self.prevRightHandHeight = 0
+        self.curRightHandHeight = 0
+        self.preHeight = 0
+        self.curHeight = 0
+        self.handState = 0
+        self.bodyState = 0
 
         self.gameover = False
 
@@ -82,34 +86,40 @@ class GameRuntime(object):
                 self.bodies = self.kinect.get_last_body_frame()
 
                 if self.bodies is not None: 
-                    for i in range(0, 2):
-                        body = self.bodies.bodies[i]
+                    for i in range(0, self.kinect.max_body_count):
+                        body = self.bodies.bodies
                         if not body.is_tracked:
-                            self.curRightHandHeight[i] = 0
+                            self.curRightHandHeight = 0
                             continue 
                     
                         joints = body.joints 
                         # save the hand positions
                         if joints[PyKinectV2.JointType_HandRight].TrackingState != PyKinectV2.TrackingState_NotTracked:
-                            if i == 0:
-                                self.curRightHandHeight[0] = joints[PyKinectV2.JointType_HandRight].Position.y
-                            elif i == 1:
-                                self.curRightHandHeight[1] = joints[PyKinectV2.JointType_HandRight].Position.y
+                            
+                            self.curRightHandHeight = joints[PyKinectV2.JointType_HandRight].Position.y
+                        if joints[PyKinectV2.JointType_Neck].TrackingState != PyKinectV2.TrackingState_NotTracked:
+                            self.curHeight = joints[PyKinectV2.JointType_Neck].Position.y
+                            
           
 
                         # calculate delta y to see if is firing
-                        self.delta[i] = self.prevRightHandHeight[i] - self.curRightHandHeight[i]
-                        if math.isnan(self.delta[i]) or self.delta[i] < 0:
-                            self.handState[i] = 0
-                            self.delta[i] = 0
-                        self.handState += self.delta*10
-
-                        # cycle previous and current heights for next time
-                        self.prevRightHandHeight[i] = self.curRightHandHeight[i]
-
-                        if self.handState[i] >= 30:
-                            self.flag = True
-                        else: self.flag = False
+                        self.delta = self.prevRightHandHeight - self.curRightHandHeight
+                        self.deltaJump = self.prevHeight - self.curHeight
+                        if math.isnan(self.delta) or self.delta < 0:
+                            self.handState = 0
+                            self.delta = 0
+                        if math.isnan(self.deltaJump) or self.deltaJump > 0:
+                            self.deltaJump = 0
+                        
+            self.handState += self.delta*300
+            self.bodyState += self.deltaJump *300
+            # cycle previous and current heights for next time
+            self.prevRightHandHeight = self.curRightHandHeight
+            self.prevHeight = self.curHeight
+            print(self.handState) # debug: printing handState
+            if self.handState >= 3:
+                self.flag = True
+            else: self.flag = False
 
             
             hToW = float(self.frameSurface.get_height()) / self.frameSurface.get_width()
