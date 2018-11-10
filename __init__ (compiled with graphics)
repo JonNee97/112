@@ -1,0 +1,134 @@
+import pygame
+pygame.init()
+
+class Axolotyl(object):
+    def __init__(self, x, y, width, height, picture, attack):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.hitbox = (self.x, self.y, self.x+self.width) 
+        self.health = 10
+        self.picture = picture
+        self.attackPic = attack
+
+    def draw(self,win,flag):
+        if flag == False:
+            win.blit(self.picture, (self.x,self.y))
+        elif flag == True:
+            win.blit(self.attackPic, (self.x,self.y))
+        pygame.draw.rect(win, (255,0,0), (self.hitbox[0], self.hitbox[1] - 70, self.width, 20))
+        pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 70, self.width - ((self.width//10) * (10 - self.health)), 20))
+
+    def hit(self):
+        if self.health > 0:
+            self.health -= 1
+        else:
+            return True
+                
+class Dog(object):
+    def __init__(self, x, y, width, height, picture, attack):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.hitbox = (self.x, self.y, self.x+self.width)  # Need to update to top of screen
+        self.health = 10
+        self.picture = picture
+        self.attackPic = attack
+
+    def draw(self,win,flag):
+        if flag == False:
+            win.blit(self.picture, (self.x,self.y))
+        elif flag == True:
+            win.blit(self.attackPic, (self.x,self.y))
+        pygame.draw.rect(win, (255,0,0), (self.hitbox[0], self.hitbox[1] - 50, self.width, 20))
+        pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 50, self.width - ((self.width//10) * (10 - self.health)), 20))
+
+    def hit(self):
+        if self.health > 0:
+            self.health -= 1
+        else:
+            return True
+
+class projectile(object):
+    def __init__(self,x,y,radius,color,speed):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.color = color
+        self.vel = 8 * speed
+
+    def draw(self,win):
+        pygame.draw.circle(win, self.color, (self.x,self.y), self.radius)
+
+def playGame():
+    #mainloop
+    win = pygame.display.set_mode((1000,600))
+
+    kimcheePic = pygame.image.load('kimchee2.png')
+    stellaPic = pygame.image.load('stella2.png')
+    bg = pygame.image.load('bg.png')
+    kimcheeAtk = pygame.image.load('kimcheeOpen2.png')
+    stellaAtk = pygame.image.load('stellaOpen2.png')
+
+    clock = pygame.time.Clock()
+
+    kimchee = Axolotyl(100, 300, 175, 175, kimcheePic, kimcheeAtk)
+    stella = Dog(700, 280, 170, 170, stellaPic, stellaAtk)
+    bulletsK = []
+    bulletsS = []
+    run = True
+    width = 1000
+    height = 600
+    gameOver = False
+    
+    while run:
+        kimcheeFlag = False
+        stellaFlag = False
+
+        clock.tick(27)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+        
+        gameOver1 = moveBullets(bulletsK, stella)
+        gameOver2 = moveBullets(bulletsS, kimchee)
+        
+        if gameOver1 == True or gameOver2 == True:
+            run = False
+            print("Game Over")  # Display game over screen
+
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_LEFT]:  ## EDIT BASED ON KINECT MAKE SURE ONLY 1 FIRED AT ONCE
+            kimcheeFlag = True
+            bulletsK.append(projectile(round(kimchee.x + kimchee.width //2), round(kimchee.y + kimchee.height//2 + 10), 6, (0,0,0), 1)) # EDIT BASED ON THEIR MOUTH LOCATION
+        if keys[pygame.K_RIGHT]:  ## EDIT BASED ON KINECT MAKE SURE ONLY 1 FIRED AT ONCE
+            stellaFlag = True
+            bulletsS.append(projectile(round(stella.x + stella.width //2), round(stella.y + stella.height//2 + 35), 6, (0,0,0), -1)) # EDIT BASED ON THEIR MOUTH LOCATION
+       
+        win.blit(bg, (0,0))
+        kimchee.draw(win, kimcheeFlag)
+        stella.draw(win, stellaFlag)
+        for bullet in bulletsK:
+            bullet.draw(win)
+        for bullet in bulletsS:
+            bullet.draw(win)
+    
+        pygame.display.update()
+
+def moveBullets(listBullets, opponent):
+    gameOver = 0
+    for bullet in listBullets:
+            bullet.x += bullet.vel
+            if bullet.x + bullet.radius > opponent.hitbox[0] and bullet.x - bullet.radius < opponent.hitbox[0] + opponent.hitbox[2]:
+                gameOver = opponent.hit()
+                listBullets.pop(listBullets.index(bullet))
+    return gameOver
+
+if __name__ == '__main__':
+    playGame()
+
+pygame.quit()
