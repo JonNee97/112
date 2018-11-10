@@ -1,0 +1,150 @@
+import pygame
+pygame.init()
+
+
+
+screenWidth = 1000
+screenHeight = 600
+imageSize = 200
+win = pygame.display.set_mode((screenWidth, screenHeight))
+
+pygame.display.set_caption("fight me")
+
+bg = pygame.image.load('bg.png')
+
+p1 = pygame.image.load('stella2.png')
+p1 = pygame.transform.scale(p1, (200,200))
+p2 = pygame.image.load('kimchee2.png')
+p2 = pygame.transform.scale(p2, (200,200))
+
+hp1 = pygame.image.load('hp.png')
+hp2 = pygame.image.load('hp.png')
+
+titleCard = pygame.image.load('titleCard.png')
+beginButton = pygame.image.load('begin.png')
+instructButton = pygame.image.load('instructions.png')
+instructions = pygame.image.load('instructionscard.png')
+showInstruct = False
+startGame = True
+
+
+clock = pygame.time.Clock()
+
+x1 = 10
+y1 = 100
+x2 = 300
+y2 = y1
+width = 100
+height = 100
+vel = 5
+isJump = False
+jumpCount = 10
+left = False
+right = False
+
+
+beginW = beginButton.get_width()
+beginH = beginButton.get_height()
+beginX = screenWidth/2 - 180
+beginY = 310
+
+instructW = instructButton.get_width()
+instructH = instructButton.get_height()
+instructX = screenWidth/2 - 180
+instructY = 400
+
+margin = 50
+
+
+def redrawGameWindow():
+    
+    win.blit(bg, (0,0))
+    
+    if startGame:
+        drawStartGame()
+    else:
+        
+        win.blit(p1, (x1,y1)) #draw kimchee
+        win.blit(p2, (x2, y2)) #draw stella
+        
+        
+        win.blit(hp1, (screenWidth/2 +  margin, margin)) #draw kimchee hp
+        win.blit(hp2, (margin - 30, margin)) #draw stella hp
+        
+    pygame.display.update()
+
+
+def drawStartGame():
+    if showInstruct:
+        win.blit(instructions,(screenWidth/2 - 250, 30))
+    else:
+        win.blit(titleCard, (screenWidth/2 - 250, 30))
+        win.blit(beginButton, (beginX, beginY))
+        win.blit(instructButton,  (instructX, instructY))
+
+
+#mainloop
+run = True
+while run:
+    
+    
+    clock.tick(27)
+
+    for event in pygame.event.get():
+
+        # Set the x, y postions of the mouse click
+        
+        #beginButton sensing
+        mos_x, mos_y = pygame.mouse.get_pos()
+        if mos_x> beginX and (mos_x<beginX+beginW):
+            x_inside = True
+        else: x_inside = False
+        if mos_y> beginY and (mos_y<beginY+beginH):
+            y_inside = True
+        else: y_inside = False
+        if x_inside and y_inside:
+            if startGame and event.type == pygame.MOUSEBUTTONDOWN:
+                startGame = False
+        
+        #instructionsButton sensing
+        if mos_x> instructX and (mos_x<instructX+instructW):
+            x_inside2 = True
+        else: x_inside2 = False
+        if mos_y> instructY and (mos_y<instructY+instructH):
+            y_inside2 = True
+        else: y_inside2 = False
+        if x_inside2 and y_inside2:
+            if startGame and event.type == pygame.MOUSEBUTTONDOWN:
+                showInstruct = True
+            
+        if event.type == pygame.QUIT:
+            run = False
+
+
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_LEFT] and x1 > vel:
+        x1 -= vel
+    elif keys[pygame.K_RIGHT] and x1 < 500 - width - vel:
+        x1 += vel
+    
+    #press backspace to go back
+    elif keys[pygame.K_BACKSPACE]: showInstruct = False
+        
+    if not(isJump):
+        if keys[pygame.K_SPACE]:
+            isJump = True
+    else:
+        if jumpCount >= -10:
+            neg = 1
+            if jumpCount < 0:
+                neg = -1
+            y1 -= (jumpCount ** 2) * 0.5 * neg
+            jumpCount -= 1
+        else:
+            isJump = False
+            jumpCount = 10
+            
+    redrawGameWindow()
+
+pygame.quit()
