@@ -1,0 +1,85 @@
+import pygame
+pygame.init()
+
+
+
+screenWidth = 500
+screenHeight = 400
+win = pygame.display.set_mode((screenWidth, screenHeight))
+
+pygame.display.set_caption("fight me")
+
+bg = pygame.image.load('bg.png')
+
+p1 = pygame.image.load('stella2.png')
+p1 = pygame.transform.scale(p1, (150,150))
+p2 = pygame.image.load('kimchee2.png')
+p2 = pygame.transform.scale(p2, (160,160))
+
+hp1 = pygame.image.load('hp.png')
+hp2 = pygame.image.load('hp.png')
+
+
+
+clock = pygame.time.Clock()
+
+x1 = 10
+y1 = 100
+x2 = 300
+y2 = y1
+width = 100
+height = 100
+vel = 5
+isJump = False
+jumpCount = 10
+left = False
+right = False
+
+margin = 50
+
+
+def redrawGameWindow():
+    win.blit(bg, (0,0))
+
+    win.blit(p1, (x1,y1)) #draw kimchee
+    win.blit(p2, (x2, y2)) #draw stella
+    
+    win.blit(hp1, (screenWidth/2 +  margin, margin)) #draw kimchee hp
+    win.blit(hp2, (margin - 30, margin)) #draw stella hp
+    
+    pygame.display.update()
+
+
+#mainloop
+run = True
+while run:
+    clock.tick(27)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_LEFT] and x1 > vel:
+        x1 -= vel
+    elif keys[pygame.K_RIGHT] and x1 < 500 - width - vel:
+        x1 += vel
+        
+    if not(isJump):
+        if keys[pygame.K_SPACE]:
+            isJump = True
+    else:
+        if jumpCount >= -10:
+            neg = 1
+            if jumpCount < 0:
+                neg = -1
+            y1 -= (jumpCount ** 2) * 0.5 * neg
+            jumpCount -= 1
+        else:
+            isJump = False
+            jumpCount = 10
+            
+    redrawGameWindow()
+
+pygame.quit()
